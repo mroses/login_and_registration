@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Login and Registration</title>
+</head>
+<body>
+
+    <div class="messages">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<ul>
+				{% for category, message in messages %}
+					<li class="{{ category }}">{{ message }}</li>
+				{% endfor %}
+				</ul>
+			{% endif %}
+		{% endwith %}
+	</div>
+
+    <form action="/login" method='POST'>
+        <p>LOGIN</p>
+        <label>Email:</label>
+        <input type="text" name="email">
+        <label>Password:</label>
+        <input type="password" name="pass_word">
+        <input type="submit" value="Login" class="button">
+    </form>
+
+
+    <form action="/register" method='POST'>
+        <p>REGISTER</p>
+        <p><label>First Name: <input type="text" name="fname" value="{{ session['fname'] }}"></label></p>
+        <p><label>Last Name: <input type="text" name="lname" value="{{ session['lname'] }}"></label></p>
+        <p><label>Email: <input type="text" name="email" value="{{ session['email'] }}"></label></p>
+        <p><label>Password: <input type="password" name="password"</label></p>
+        <p><label>Confrim Password: <input type="password" name="password_confirm"></label></p>
+        <input type="submit" value="Submit" class="button">
+    </form>
+
+    
+
+    
+</body>
+</html>
