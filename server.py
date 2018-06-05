@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template, redirect, flash, session
 import md5
+
+from flask import Flask, request, render_template, redirect, flash, session
 
 app = Flask(__name__)
 app.secret_key = 'myothersecretkey'
@@ -18,7 +19,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/success')
-def member():
+def success():
     if session.get('id') == None:
         return redirect('/')
     return render_template('success.html')
@@ -38,7 +39,7 @@ def register():
     password_valid = False
     confirm_password_valid = False
 
-    query = "SELECT * FROM users WHERE email = :email"
+    query = "SELECT * FROM users WHERE email=:email"
     data = {
         'email': session['email']
     }
@@ -73,7 +74,7 @@ def register():
         flash('email entered must be valid email address')
 
 
-    if len(session['password']) > 8:
+    if len(session['password']) > 7:
         password_valid = True
     else:
         flash('password must contain at least 8 characters')
@@ -93,22 +94,23 @@ def register():
             'fname': session['fname'],
             'lname': session['lname'],
             'email': session['email'],
-            'password': md5.new(request.form['password']).hexdigest()
+            'password': md5.new(session['password']).hexdigest()
         }
 
         mysql.query_db(query, data) #sends above query to db so users are actually inserted into db 
         
-        query = "SELECT * FROM users WHERE fname =:fname, lname=:lname, email = :email"
+        query = "SELECT * FROM users WHERE first_name=:fname AND last_name=:lname AND email=:email"
         data = {
             'fname': session['fname'],
             'lname': session['lname'],
             'email': session['email']
         }
         verified_user = mysql.query_db(query, data)
+        print verified_user
         session.clear()
         session['id'] = verified_user[0]['id']
-        session['fname'] = verified_user[0]['fname']
-        return redirect('/')
+        session['fname'] = verified_user[0]['first_name']
+        return redirect('/success')
         #return redirect('/success')
         #return render_template('success.html') #info is sent to db and success.html is displayed.
     else:
@@ -117,23 +119,73 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login(): 
-    session['email'] = request.form['email']
-    session['password'] = request.form['password']
+    email = request.form['email']
+    password = request.form['password']
+    #md5.new(session['password']).hexdigest()
+
+    query = "SELECT * FROM users WHERE email=:email AND password=:password"
+    data = {
+        'email': email,
+        'password': md5.new(password).hexdigest
+    }
+    user = mysql.query_db(query, data)
+
+    if len(user) > 0:
+        print 'user exists'
+        session['id'] == user[0]['id']
+        session['fname'] == user[0]['first_name']
+        return redirect('/success')
+    else:
+        flash('incorrect email and password')
+        return redirect('/')
+
+app.run(debug=True)
+
+
+'''
+    users = mysql.query_db(query, data)
+    print users
+
+
+    if len(users) > 0:
+        print "user exists"
+        #if session['password'] == users['password']:
+        user = users[0]
+        if user['password'] == request.form['password']:
+            session['id'] = user['id']
+            return redirect('/success')
+        else:
+            flash('email and password do not match')
+            return redirect('/')
+    else:
+        flash('user email does not exist')
+        return redirect('/')
+    
+    
+    ['email'] == session['email'] AND users['password'] == session['password']:
+        return redirect('/success')
+    else: 
+            flash('email and password do not match')
+        return redirect('/')
+
+   
+    email = request.form['email']
+    password = request.form['password']
 
     #selects all data from db row where email entered in form matches email in db AND password in form match password stored in db FOR THAT EMAIL address
     query = "SELECT * FROM users WHERE email=:email AND password=:password"
     data = {
         'email': email,
         'password': md5.new(password).hexdigest()
+        #'password': md5.new(session['password']).hexdigest()
     }
     verified_user = mysql.query_db(query, data)
 
     if len(verified_user) != 0:
         session['id'] = verified_user[0]['id']
         session['fname'] = verified_user[0]['first_name']
-        return render_template('success.html')
+        return redirect('/success')
     else:
         flash('username and password do not match')
         return redirect('/')
-
-app.run(debug=True)
+'''
